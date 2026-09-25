@@ -54,8 +54,8 @@ Access Grafana at `http://localhost:3000` with the credentials from
 - **Two compose files, same pattern as the official boilerplate**:
   production with no plaintext credentials (via Barbara Secrets) vs.
   development with an explicit `env_file` for a smooth local workflow.
-- The `./persist/grafana-data` volume follows Barbara's convention for
-  bind mounts: only allowed under `./persist/`, `./appconfig` or `./sys/`
-  (see parser restrictions).
+- `grafana-data` is a Docker named volume (not a bind mount) — Docker
+  manages its storage and ownership, avoiding host filesystem permission
+  issues with Grafana's non-root container user.
 - You can pin any public image tag (`grafana:11.3.0`, `grafana:latest`,
   etc.) — same as you would with `docker run` locally.

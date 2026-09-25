@@ -6,4 +6,7 @@ services:
     env_file:
       - barbarasecrets.env
     volumes:
-      - ./persist/grafana-data:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  grafana-data:

@@ -22,12 +22,26 @@ plant/motor1/telemetry → {"motor_id": "motor1", "temperature_c": 66.2,
 Besides publishing telemetry, the app reads and prints, following the same
 pattern as the boilerplate:
 
-* `appConfig` (`appconfig.json`) — broker host/port, MQTT topic and
-  publish interval.
+* `appConfig` (`appconfig.json`) — broker host/port, MQTT topic, publish
+  interval, and minimum log level.
 * `globalConfig` (`global.json`) — plant name.
 * Secrets (`MQTT_USER` / `MQTT_PASSWORD`) — credentials for the Marketplace
   Mosquitto broker (defaults `bbruser`/`bbrpassword`, change for
   production).
+
+### Logging
+
+The app uses Python's standard `logging` module with four levels:
+
+* `DEBUG` — every simulated sensor reading, before it's published.
+* `INFO` — startup info, broker connection, and each successful publish.
+* `WARNING` — logged when the simulated temperature goes above 67.5°C
+  (a simple health-check example).
+* `ERROR` — logged if the app can't connect to the MQTT broker.
+
+The minimum level shown is controlled by `logLevel` in `appconfig.json`
+(`DEBUG`, `INFO`, `WARNING` or `ERROR`) — set it to `INFO` or higher in
+production to silence per-reading `DEBUG` noise.
 
 ## Structure
 
@@ -67,13 +81,15 @@ Then, start the app:
 docker-compose -f docker-compose_dev.yml up --build
 ```
 
-You should see log lines from `motor-simulator` like:
+You should see log lines from `motor-simulator` like (with the default
+`logLevel: DEBUG` in `appconfigDev/appconfig.json`):
 
 ```
-motor-simulator-1  | Plant: demo-plant-workshop
-motor-simulator-1  | Connecting to MQTT broker at localhost:1883
-motor-simulator-1  | Publishing telemetry to 'plant/motor1/telemetry' every 5s...
-motor-simulator-1  | Published: {'motor_id': 'motor1', 'temperature_c': 66.2, ...}
+motor-simulator-1  | 2026-09-25 10:00:00,000 INFO     motor-simulator: Plant: demo-plant-workshop
+motor-simulator-1  | 2026-09-25 10:00:00,001 INFO     motor-simulator: Connected to MQTT broker at localhost:1883
+motor-simulator-1  | 2026-09-25 10:00:00,001 INFO     motor-simulator: Publishing telemetry to 'plant/motor1/telemetry' every 5s...
+motor-simulator-1  | 2026-09-25 10:00:00,002 DEBUG    motor-simulator: Sensor reading: {'motor_id': 'motor1', 'temperature_c': 66.2, ...}
+motor-simulator-1  | 2026-09-25 10:00:00,003 INFO     motor-simulator: Published: {'motor_id': 'motor1', 'temperature_c': 66.2, ...}
 ```
 
 You can subscribe to the topic to see it live:
@@ -91,9 +107,10 @@ docker exec -it mosquitto-dev mosquitto_sub -t "plant/motor1/telemetry"
    which are local development only) with `docker-compose.yml` at the
    root.
 3. Barbara Panel → **App Library → Upload App** → upload the zip.
-4. Configure `appConfig` (`mqttHost: "mqttbbr"`, port, topic, interval),
-   `globalConfig` and the `MQTT_USER`/`MQTT_PASSWORD` secrets (credentials
-   for the already-deployed Mosquitto broker) before deploying.
+4. Configure `appConfig` (`mqttHost: "mqttbbr"`, port, topic, interval,
+   `logLevel`), `globalConfig` and the `MQTT_USER`/`MQTT_PASSWORD` secrets
+   (credentials for the already-deployed Mosquitto broker) before
+   deploying.
 5. Deploy on the test node — Barbara builds the image from the
    `Dockerfile` in `imageSource/` automatically.
 6. Check the `motor-simulator` workload logs to confirm it's publishing
@@ -119,8 +136,12 @@ docker exec -it mosquitto-dev mosquitto_sub -t "plant/motor1/telemetry"
   (with `env_file` and `appconfig` volumes mounted by hand, simulating
   what Barbara injects automatically in production).
 - **`appConfig` vs `globalConfig`**: `appconfig.json` is specific to this
-  app (broker host/port, topic, interval); `global.json` is device/plant
-  level and would be shared with other apps on the same node.
+  app (broker host/port, topic, interval, log level); `global.json` is
+  device/plant level and would be shared with other apps on the same node.
+- **Log level via `appConfig`**: switching `logLevel` between `DEBUG` and
+  `INFO`/`WARNING` from Panel — no redeploy needed if you expose it as a
+  runtime-reloadable App Config — is a common pattern for turning verbose
+  debugging on/off without touching code.
 - **Secrets** (`MQTT_USER`/`MQTT_PASSWORD`) are read as environment
   variables — in Barbara these are managed encrypted from Panel, never in
   plaintext in the compose file.

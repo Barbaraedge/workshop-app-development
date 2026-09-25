@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 import time
@@ -9,6 +10,12 @@ import paho.mqtt.client as mqtt
 BASE_TEMPERATURE_C = 65.0
 BASE_VIBRATION_MM_S = 2.0
 BASE_RPM = 1450
+
+# Temperature above this threshold is logged as a warning (simulates a
+# basic health check on the sensor reading).
+HIGH_TEMPERATURE_THRESHOLD_C = 67.5
+
+logger = logging.getLogger("motor-simulator")
 
 
 def get_app_config():
@@ -31,22 +38,47 @@ def get_mqtt_credentials():
     }
 
 
+def configure_logging(level_name):
+    """Sets up logging with the minimum level read from appConfig."""
+    level = getattr(logging, level_name.upper(), None)
+    if not isinstance(level, int):
+        logging.basicConfig(level=logging.INFO)
+        logger.warning(
+            "Unknown log level '%s' in appConfig, falling back to INFO", level_name
+        )
+        return
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
+    )
+
+
 def read_sensors():
     """Simulates reading the sensors of an industrial motor."""
     temperature = round(BASE_TEMPERATURE_C + random.uniform(-3, 3), 1)
     vibration = round(BASE_VIBRATION_MM_S + random.uniform(-0.5, 0.5), 2)
     rpm = BASE_RPM + random.randint(-20, 20)
-    return {
+    payload = {
         "motor_id": "motor1",
         "temperature_c": temperature,
         "vibration_mm_s": vibration,
         "rpm": rpm,
         "timestamp": int(time.time()),
     }
+    logger.debug("Sensor reading: %s", payload)
+    if temperature > HIGH_TEMPERATURE_THRESHOLD_C:
+        logger.warning(
+            "Motor temperature %.1fC is above the %.1fC threshold",
+            temperature,
+            HIGH_TEMPERATURE_THRESHOLD_C,
+        )
+    return payload
 
 
 def main():
     app_config = get_app_config()
+    configure_logging(app_config.get("logLevel", "INFO"))
+
     # The MQTT broker is the "Broker MQTT Mosquitto" Marketplace app,
     # deployed separately on the same node (Docker service "mqttbbr").
     mqtt_host = app_config.get("mqttHost", "mqttbbr")
@@ -62,20 +94,25 @@ def main():
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     if credentials["user"]:
         client.username_pw_set(credentials["user"], credentials["password"])
-    client.connect(mqtt_host, mqtt_port)
+
+    try:
+        client.connect(mqtt_host, mqtt_port)
+    except (ConnectionRefusedError, OSError) as exc:
+        logger.error("Could not connect to MQTT broker at %s:%s: %s", mqtt_host, mqtt_port, exc)
+        raise
     client.loop_start()
 
-    print(f"Plant: {plant_name}")
-    print(f"Connecting to MQTT broker at {mqtt_host}:{mqtt_port}")
-    print(f"Publishing telemetry to '{topic}' every {publish_interval}s...")
+    logger.info("Plant: %s", plant_name)
+    logger.info("Connected to MQTT broker at %s:%s", mqtt_host, mqtt_port)
+    logger.info("Publishing telemetry to '%s' every %ss...", topic, publish_interval)
     try:
         while True:
             payload = read_sensors()
             client.publish(topic, json.dumps(payload))
-            print(f"Published: {payload}")
+            logger.info("Published: %s", payload)
             time.sleep(publish_interval)
     except KeyboardInterrupt:
-        pass
+        logger.info("Shutting down (keyboard interrupt)")
     finally:
         client.loop_stop()
         client.disconnect()

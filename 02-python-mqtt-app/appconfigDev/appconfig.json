@@ -2,5 +2,6 @@
   "mqttHost": "localhost",
   "mqttPort": 1883,
   "mqttTopic": "plant/motor1/telemetry",
-  "publishIntervalSeconds": 5
+  "publishIntervalSeconds": 5,
+  "logLevel": "DEBUG"
 }
