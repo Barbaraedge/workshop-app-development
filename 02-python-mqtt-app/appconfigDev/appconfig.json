@@ -1,6 +1,6 @@
 {
   "mqttHost": "localhost",
   "mqttPort": 1883,
-  "mqttTopic": "planta/motor1/telemetria",
+  "mqttTopic": "plant/motor1/telemetry",
   "publishIntervalSeconds": 5
 }

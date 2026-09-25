@@ -1,33 +1,35 @@
-# Workshop: Desarrollo y despliegue de apps en Barbara
+# Workshop: App Development and Deployment on Barbara
 
-Material práctico para un workshop online sobre desarrollo de aplicaciones
-y despliegue en nodos edge de [Barbara](https://www.barbara.tech). Incluye
-dos ejercicios guiados, cada uno con instrucciones paso a paso para
-desarrollar en local y desplegar en un Barbara Edge Node.
+Hands-on material for an online workshop on developing applications and
+deploying them on [Barbara](https://www.barbara.tech) edge nodes. Includes
+two guided exercises, each with step-by-step instructions to develop
+locally and deploy on a Barbara Edge Node.
 
-## Ejercicios
+## Exercises
 
-| # | Ejercicio | Qué aprenderás |
+| # | Exercise | What you'll learn |
 |---|---|---|
-| 1 | [Desplegar una imagen pública de Docker Hub](01-grafana-dockerhub/) | El flujo más simple para llevar una app ya publicada (Grafana) a un nodo, sin escribir código. |
-| 2 | [Desarrollar una app propia en Python (MQTT)](02-python-mqtt-app/) | El flujo completo de desarrollo: código propio, `Dockerfile`, configuración (`appConfig`/`globalConfig`) y secrets, integrándose con una app del Marketplace ya desplegada en el nodo. |
+| 1 | [Deploy a public Docker Hub image](01-grafana-dockerhub/) | The simplest flow for bringing an already-published app (Grafana) to a node, no code required. |
+| 2 | [Develop your own Python app (MQTT)](02-python-mqtt-app/) | The full development flow: custom code, `Dockerfile`, configuration (`appConfig`/`globalConfig`) and secrets, integrating with a Marketplace app already deployed on the node. |
 
-Cada carpeta tiene su propio `README.md` con instrucciones detalladas.
+Each folder has its own `README.md` with detailed instructions.
 
-## Requisitos previos
+## Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) y Docker Compose
-  instalados en tu máquina.
-- Acceso a un nodo Barbara Core activo (`ONLINE` en Barbara Panel) donde
-  desplegar las apps de los ejercicios.
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+  installed on your machine.
+- Access to an active Barbara Core node (`ONLINE` in Barbara Panel) where
+  you can deploy the exercise apps.
 
-## Convenciones usadas en este repo
+## Conventions used in this repo
 
-Ambos ejercicios siguen la estructura del
-[boilerplate oficial de Barbara](https://github.com/Barbaraedge/training_barbara_apps_development/tree/main/boilerplate_01_python):
+Both exercises follow the structure of Barbara's
+[official boilerplate](https://github.com/Barbaraedge/training_barbara_apps_development/tree/main/boilerplate_01_python):
 
-- `docker-compose.yml` — para desplegar en un Barbara Edge Node.
-- `docker-compose_dev.yml` — para desarrollar y probar en tu máquina local.
-- `imageSource/` — código fuente y `Dockerfile` de la app (cuando aplica).
-- `appconfigDev/` y `barbarasecrets.env` — configuración y secretos de
-  ejemplo, solo para desarrollo local.
+- `docker-compose.yml` — for deploying on a Barbara Edge Node.
+- `docker-compose_dev.yml` — for developing and testing on your local
+  machine.
+- `imageSource/` — the app's source code and `Dockerfile` (where
+  applicable).
+- `appconfigDev/` and `barbarasecrets.env` — example configuration and
+  secrets, local development only.
