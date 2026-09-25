@@ -1,0 +1,7 @@
+services:
+  motor-simulator:
+    build: ./imageSource
+    env_file:
+      - barbarasecrets.env
+    volumes:
+      - ./appconfigDev:/appconfig
